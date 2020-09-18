@@ -1,0 +1,61 @@
+# data import
+data_iris <- read.csv(file.choose(),sep = ",",header = T)
+data_iris <- data_iris[,-1]
+library(ggplot2)
+library(dplyr)
+
+# univariate analysis
+data_iris %>% 
+  select(SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm) %>% 
+  summary()
+
+data_iris %>% 
+  select(SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm) %>% 
+  cor() 
+
+# SepalLengthcm
+p1 <- data_iris %>% 
+  ggplot(aes(SepalLengthCm))+ geom_histogram(stat = "count",fill="blue")+
+  labs(title = "SepalLengthCm Distribution",y="Count")+theme_minimal()
+
+p2 <- data_iris %>% 
+  ggplot(aes(SepalWidthCm))+ geom_histogram(stat = "count",fill="red")+
+  labs(title = "SepalWidthCm Distribution",y="Count")+theme_minimal()
+
+p3 <- data_iris %>% 
+  ggplot(aes(PetalLengthCm))+ geom_histogram(stat = "count",fill="brown")+
+  labs(title = "PetalLengthCm Distribution",y="Count")+theme_minimal()
+
+p4 <- data_iris %>% 
+  ggplot(aes(PetalWidthCm))+ geom_histogram(stat = "count",fill="magenta")+
+  labs(title = "PetalWidthCm Distribution",y="Count")+theme_minimal()
+
+library(cowplot)
+
+plot_grid(p1,p2,p3,p4,nrow = 2)
+
+# Multivariate Analysis
+
+library(corrplot)
+data_iris %>% 
+  select(SepalLengthCm,SepalWidthCm,PetalLengthCm,PetalWidthCm) %>% 
+  cor() %>% corrplot()
+
+# split data into test and train
+library(rsample)
+data_split <- initial_split(data_iris,prop = 0.80)
+train <- training(data_split)
+test <- testing(data_split)
+
+# decision tree model
+library(rpart)
+library(partykit)
+# training the model
+tree_dt <- rpart(Species~.,data = train, cp = 0.0001)
+
+plot(as.party(tree_dt)) # visualisation of the decision tree
+# prediction 
+test$Species_predict <-  predict(tree_dt,newdata = test, type = "class")
+
+# we can use this tree_dt model to predict the class of any newdata
+
